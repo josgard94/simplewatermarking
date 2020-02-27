@@ -1,7 +1,7 @@
 %
 %   Centro de Investigación y Estudios Avanzados del IPN 
-%       Topicos Avanzado de Ingenieria Computacional
-% 
+%   
+%
 %   Date: Fabruary 2020
 %   Edgard José Diaz Tipacamu
 %   ediaz@tamps.cinvestav.mx
