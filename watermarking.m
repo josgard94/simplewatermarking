@@ -14,8 +14,8 @@ function marcado = watermarking(block,b)
     alpha = 0.5; %robustness factor 
     
     rng('default')
-    rng(5); %pseudoramdon seed
-    w1 = randn(1,2049); % pseudorandom generator control seed
+    rng(5); %pseudorandom generator control seed
+    w1 = randn(1,2049); % pseudorandom vector
     
     %change the values of the vector in -1 and 1, where the position 
     %will take the value of one when the pseudorandom number is greater than 0, 
