@@ -1,51 +1,49 @@
 %
-%   Centro de Investigación y Estudios Avanzados del IPN 
-%   Topicos Avanzado de Ingenieria Computacional
+%   Centro de InvestigaciÃ³n y Estudios Avanzados del IPN 
+%   
 % 
-%   Edgard José Diaz Tipacamu
+%   Edgard JosÃ© Diaz Tipacamu
 %   ediaz@tamps.cinvestav.mx
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-clearvars; clc; close all;
-
-%Cargar audio marcado
-[y,Fs] = audioread('../marcado2.wav');
-y = y(58462:end);
-[n,~] = size(y);
-
-%Adición de ruido gaussiano awgn(Señal,SNR en db,'measured',seed)
-%y = awgn(y,30,'measured',3);
-
-
-inicio = 1;
-fin = 512;
+clearvars; clc; close all; %clean work space
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Señal piloto  de referencia para resincronizar
+% pilot signal for synchronization
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % t = 0:1/Fs:0.092880;
 % w = 21.5;
 % SignalReferencs = 0.004*(sin(2*pi*w*t));
 % SignalReferencs = SignalReferencs';
 rand( 'seed', 5 ); 
-SignalReferencs = 0.4 * ( rand(512,1) - 0.5 ); %Vector columna  de 16284 x 1
+SignalReferencs = 0.4 * ( rand(512,1) - 0.5 ); %pseudorandom vector or synchronization code 
 
-Signal = y(inicio:fin);
+
+%read marked audio file 
+[y,Fs] = audioread('../marcado2.wav');
+y = y(58462:end); %change signal start to simulate synchronization problem
+[n,~] = size(y); % signal size
+
+%control index to traverse the audio signal and search the synchronization code
+inicio = 1;
+fin = 4096;
+Signal = y(inicio:fin); %4096 audio sample window to search the synchronization code.
+
+
 aux = Signal;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%   Busqueda del código de sincronización
+%   search synchronization code
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 tic
-for i = 1:length(y)-512
+for i = 1:length(y)-4096
     
-    %proceso de blanqueamiento de la señal
-    
+    %Signal whitening
     Signal = whitening(Signal,1);
     
-    %Calculo de correlación de la señal de entrada con la de referenecia
-    cor =  corr(SignalReferencs(1:512),Signal);
+    %correlation between the marked audio signal and the reference signal
+    cor =  corr(SignalReferencs(1:4096),Signal);
     %plot(Signal);
     if cor < 0.35
-        Signal = zeros(1,512);
+        Signal = zeros(1,4096);
         inicio = inicio + 1;
         fin = fin + 1;
         Signal = y(inicio:fin);
@@ -54,14 +52,14 @@ for i = 1:length(y)-512
         figure(1)
         subplot(2,1,1);
         plot(aux);
-        title('señal desincronizada')
+        title('seÃ±al desincronizada')
         xlabel('Muestras');
         ylabel('Amplitud');
         subplot(2,1,2);
         plot(y(inicio:fin));
         hold on;
         plot(SignalReferencs);
-        title('señal sincronizada')
+        title('seÃ±al sincronizada')
         xlabel('Muestras');
         ylabel('Amplitud');
         y = y(inicio:end);
@@ -73,14 +71,14 @@ end
 contador = 1;
 p = 1;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%   Extracción  de la marca de agua.
+%   watermark extraction  loop
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 for k = 1:4096:length(y)-4096
     if contador == 1
         contador = contador + 1;
     else
         block(k:(k+4095)) = fft(y(k:(k+4095)));
-        data2(p) = extractdata(block(k:(k+4095)));
+        data2(p) = extractdata(block(k:(k+4095))); %data hidden extraction
         p = p + 1;
         contador = contador + 1;
         if contador > 10
@@ -91,19 +89,19 @@ for k = 1:4096:length(y)-4096
     end
 end
 
-%cargar vector de datos insertados originalmente a la señal
-
+%load the vector of data that was embedded in the carrier signal
 load('../data.mat')
+
 if length(data) < length(data2)
     data2 = data2(1:90);
 end
 data = data(1:length(data2));
 
-%Conversion de los vectores en vectores logicos
+%change vectors to logical vectors
 X = data > 0;
 Y = data2 > 0;
 
-%Calculo   del BER
+%calculate bit error ratio
 [number,ratio] = biterr(Y,X);
 fprintf('\n');
 d = strcat('BER: ',num2str(ratio));
