@@ -15,7 +15,7 @@ clearvars; clc; close all; %clean work space
 % SignalReferencs = 0.004*(sin(2*pi*w*t));
 % SignalReferencs = SignalReferencs';
 rand( 'seed', 5 ); 
-SignalReferencs = 0.4 * ( rand(512,1) - 0.5 ); %pseudorandom vector or synchronization code 
+SignalReferencs = 0.4 * ( rand(4096,1) - 0.5 ); %pseudorandom vector or synchronization code 
 
 
 %read marked audio file 
@@ -33,7 +33,7 @@ aux = Signal;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %   search synchronization code
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-tic
+
 for i = 1:length(y)-4096
     
     %Signal whitening
@@ -48,13 +48,14 @@ for i = 1:length(y)-4096
         fin = fin + 1;
         Signal = y(inicio:fin);
     else
-        toc;
+        %Plot input signal or desynchronized signal
         figure(1)
         subplot(2,1,1);
         plot(aux);
         title('señal desincronizada')
         xlabel('Muestras');
         ylabel('Amplitud');
+        %Graph signal found once the audio signal is synchronized.
         subplot(2,1,2);
         plot(y(inicio:fin));
         hold on;
